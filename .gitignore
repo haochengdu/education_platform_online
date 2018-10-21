@@ -1,0 +1,8 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+*.whl
+xadmin-django2.zip
+education_platform_online/settings.py
+
+
+
