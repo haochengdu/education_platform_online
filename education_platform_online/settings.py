@@ -28,7 +28,7 @@ SECRET_KEY = '44qp_3uj%x&!-2w!bm%y*rp5th6aa%6g$2+u^&x6mqtla9zzn@'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+# 设置自定义的验证类
 AUTHENTICATION_BACKENDS = (
     'users.views.CustomBackend',
 )
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pure_pagination',
     'users',
     'course',
     'organization',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'xadmin',
     'crispy_forms',
     'captcha',
+
 ]
 
 MIDDLEWARE = [
@@ -74,6 +76,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # 添加图片处理器，为了在课程列表中前面加上MEDIA_URL
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -141,6 +145,10 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
+
+# 设置上传文件的路径
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # 指定根目录
 
 # 使用新浪邮箱发邮件
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
