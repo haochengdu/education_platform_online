@@ -43,6 +43,10 @@ class CourseOrg(models.Model):
         # ordering = ['add_time', ]
         ordering = ['id']
 
+    # 获取机构的教师数
+    def get_teacher_nums(self):
+        return self.teacher_set.all().count()
+
     def __str__(self):
         return self.name
 

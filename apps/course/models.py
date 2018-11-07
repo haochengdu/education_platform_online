@@ -23,10 +23,20 @@ class Course(models.Model):
     click_nums = models.IntegerField("点击数", default=0)
     add_time = models.DateTimeField("添加时间", default=datetime.now, )
     course_org = models.ForeignKey(CourseOrg, on_delete=models.CASCADE, verbose_name="所属机构", null=True, blank=True)
+    category = models.CharField("课程类别", max_length=20, default="")
+    tag = models.CharField('课程标签', default='', max_length=10)
 
     class Meta:
         verbose_name = "课程"
         verbose_name_plural = verbose_name
+
+    # 获取课程的章节数
+    def get_lesson_nums(self):
+        return self.lesson_set.all().count()
+
+    # 获取这门课程的学习用户
+    def get_learn_users(self):
+        return self.usercourse_set.all()[:5]
 
     def __str__(self):
         return self.name
