@@ -27,7 +27,7 @@ SECRET_KEY = '44qp_3uj%x&!-2w!bm%y*rp5th6aa%6g$2+u^&x6mqtla9zzn@'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 # 设置自定义的验证类
 AUTHENTICATION_BACKENDS = (
     'users.views.CustomBackend',

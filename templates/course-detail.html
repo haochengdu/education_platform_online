@@ -41,14 +41,14 @@
                                         class="pram word3">时&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;长：</span><span>{{ course.learn_times }}</span>
                                 </li>
                                 <li><span
-                                        class="pram word3">章&nbsp;节&nbsp;数：</span><span>{{ coursr.get_lesson_nums }}</span>
+                                        class="pram word3">章&nbsp;节&nbsp;数：</span><span>{{ course.get_lesson_nums }}</span>
                                 </li>
                                 <li><span class="pram word3">课程类别：</span><span title="">{{ course.category }}</span>
                                 </li>
                                 <li class="piclist"><span class="pram word4">学习用户：</span>
-                                    {% for learn_user in course.get_learn_users %}
+                                    {% for user_course in course.get_learn_users %}
                                         <span class="pic"><img width="40" height="40"
-                                                               src="{{ MEDIA_URL }}{{ learn_user.image }}"/></span>
+                                                               src="{{ MEDIA_URL }}{{ user_course.user.image }}"/></span>
                                     {% endfor %}
 
                                 </li>
@@ -57,7 +57,7 @@
                                 <div class="btn colectgroupbtn" id="jsLeftBtn">
                                     {% if has_fav_course %}已收藏{% else %}收藏{% endif %}
                                 </div>
-                                <div class="buy btn"><a style="color: white" href="course-video.html">开始学习</a></div>
+                                <div class="buy btn"><a style="color: white" href="{% url 'course:course_info' course.id %}">开始学习</a></div>
                             </div>
                         </div>
                         <div class="group-share-box">
