@@ -1,11 +1,14 @@
 # -*- coding:utf-8 -*-
+from django.db.models import Q
 from django.http import HttpResponse
 from pure_pagination import PageNotAnInteger, Paginator
 from django.shortcuts import render
 from django.views import View
 
+from course.models import Course
 from operation.form import UserAskForm
 from operation.models import UserFavorite
+from utils.mixin_utils import LoginRequiredMixin
 from .models import CityDict, CourseOrg, Teacher
 
 
@@ -15,6 +18,10 @@ class OrgView(View):
     def get(self, request):
         # 默认取出所有课程机构
         all_orgs = CourseOrg.objects.all()
+        # 机构搜索功能
+        search_keywords = request.GET.get('keywords', '')
+        if search_keywords:
+            all_orgs = all_orgs.filter(Q(name__icontains=search_keywords) | Q(desc__icontains=search_keywords))
         # 所有授课机构排名，按点击量排名，只取前三个（也可是做成某种类型的或某个城市的机构的排名）
         hot_orgs = all_orgs.order_by('-click_nums')[:3]
         # 机构类别筛选
@@ -189,13 +196,17 @@ class TeacherListView(View):
     def get(self, request):
         all_teachers = Teacher.objects.all()
         teachers_num = all_teachers.count()
+        # 讲师排行榜
+        teachers_ranking_list = all_teachers.order_by('-click_nums')[:3]
+        # 老师搜索
+        search_keywords = request.GET.get('keywords', '')
+        if search_keywords:
+            all_teachers = all_teachers.filter(Q(name__icontains=search_keywords))
         # 人气排序
         sort_flag = request.GET.get('sort', '')
         if sort_flag:
             if sort_flag == 'hot':
                 all_teachers = all_teachers.order_by('-click_nums')
-        # 讲师排行榜
-        teachers_ranking_list = all_teachers.order_by('-click_nums')[:3]
         # 分页
         try:
             page = request.GET.get('page', 1)
@@ -212,3 +223,36 @@ class TeacherListView(View):
                           'sort': sort_flag,
 
                       })
+
+
+class TeacherDetailView(LoginRequiredMixin, View):
+    """讲师详情"""
+
+    def get(self, request, teacher_id):
+        teacher = None
+        all_courses = None
+        # 教师收藏和机构收藏
+        has_teacher_faved = False
+        has_org_faved = False
+        teacher_list = Teacher.objects.filter(id=int(teacher_id))
+        if teacher_list:
+            teacher = teacher_list[0]
+            # 该教师的全部课程
+            all_courses = Course.objects.filter(teacher=teacher)
+            # 教师收藏和机构收藏
+            if UserFavorite.objects.filter(user=request.user, fav_type=3, fav_id=teacher_id):
+                has_teacher_faved = True
+            if UserFavorite.objects.filter(user=request.user, fav_type=2, fav_id=teacher.org.id):
+                has_org_faved = True
+        # 讲师排行榜，根据点击率排序
+        sorted_teachers = Teacher.objects.order_by('-click_nums')[:3]
+        return render(request, 'teacher-detail.html',
+                      {
+                          'teacher': teacher,
+                          'all_courses': all_courses,
+                          'sorted_teachers': sorted_teachers,
+                          'has_teacher_faved': has_teacher_faved,
+                          'has_org_faved': has_org_faved,
+                      })
+
+

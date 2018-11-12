@@ -1,6 +1,7 @@
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views import View
@@ -21,6 +22,13 @@ class CourseListView(View):
         hot_courses = all_courses.order_by('-click_nums')[:3]
         # 排序
         sort_flag = request.GET.get('sort', '')
+        # 搜索功能
+        search_keywords = request.GET.get('keywords', '')
+        # 做like语句的操作,i代表不区分大小写,or操作使用Q
+        if search_keywords:
+            all_courses = all_courses.filter(
+                Q(name__icontains=search_keywords) | Q(desc__icontains=search_keywords) | Q(
+                    detail__icontains=search_keywords))
         if sort_flag:
             if sort_flag == 'students':
                 # 根据学习人数排序
@@ -208,11 +216,3 @@ class VideoPlayView(LoginRequiredMixin, View):
                           "all_resources": all_resources,
                           "relate_courses": relate_courses,
                       })
-
-
-
-
-
-
-
-
