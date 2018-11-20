@@ -35,6 +35,7 @@ class CourseOrg(models.Model):
     image = models.ImageField('封面图', upload_to='org/%Y%m', max_length=100)
     address = models.CharField('机构地址', max_length=150, )
     city = models.ForeignKey(CityDict, verbose_name='所在城市', on_delete=models.CASCADE)
+    tag = models.CharField('机构标签', max_length=10, default='全国知名')
     add_time = models.DateTimeField(default=datetime.now)
 
     class Meta:
@@ -73,6 +74,11 @@ class Teacher(models.Model):
         verbose_name_plural = verbose_name
         # ordering = ['add_time', ]
         ordering = ['id']
+
+    def get_course_nums(self):
+        """获取该老师的课程数量"""
+
+        return self.course_set.all().count()
 
     def __str__(self):
         return "[{0}]的教师: {1}".format(self.org, self.name)

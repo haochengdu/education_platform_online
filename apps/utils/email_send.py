@@ -49,3 +49,11 @@ def send_register_eamil(email, send_type="register"):
         # 如果发送成功
         if send_status:
             pass
+    elif send_type == "update_email":
+        email_title = "NBA邮箱修改验证码"
+        email_body = "你的邮箱验证码为{0}".format(code)
+        # 使用Django内置函数完成邮件发送。四个参数：主题，邮件内容，从哪里发，接受者list
+        send_status = send_mail(email_title, email_body, EMAIL_HOST_USER, [email])
+        # 如果发送成功
+        if send_status:
+            pass

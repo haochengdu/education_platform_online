@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'organization',
     'operation',
     'xadmin',
+    'DjangoUeditor',
     'crispy_forms',
     'captcha',
 
@@ -145,6 +146,10 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
 )
+# 静态文件 当DEBUG = False(生产模式下)时需要重新配置静态文件
+# 404和500,生成环境汇总，必须设置debug = False
+# 一旦debug改为false，django就不会代管你的静态文件，所以要设置一个url处理静态文件
+STATIC_ROOT = os.path.join(BASE_DIR, '/static/')
 
 # 设置上传文件的路径
 MEDIA_URL = '/media/'

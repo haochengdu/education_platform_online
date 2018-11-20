@@ -3,6 +3,7 @@
 from datetime import datetime
 from django.db import models
 
+from DjangoUeditor.models import UEditorField
 from organization.models import CourseOrg, Teacher
 
 
@@ -14,7 +15,9 @@ class Course(models.Model):
     )
     name = models.CharField("课程名", max_length=50)
     desc = models.CharField("课程描述", max_length=300)
-    detail = models.TextField("课程详情")
+    # detail = models.TextField("课程详情")
+    detail = UEditorField(verbose_name=u'课程详情', width=600, height=300, imagePath="courses/ueditor/",
+                          filePath="courses/ueditor/", default='')
     degree = models.CharField('难度', choices=DEGREE_CHOICES, max_length=2)
     learn_times = models.IntegerField("学习时长(分钟数)", default=0)
     students = models.IntegerField("学习人数", default=0)
@@ -28,6 +31,7 @@ class Course(models.Model):
     teacher = models.ForeignKey(Teacher, verbose_name='讲师', null=True, blank=True, on_delete=models.CASCADE)
     youneed_know = models.CharField('课程须知', max_length=300, default='')
     teacher_tell = models.CharField('老师告诉你', max_length=300, default='')
+    is_banner = models.BooleanField('是否轮播', default=False)
 
     class Meta:
         verbose_name = "课程"
@@ -44,6 +48,35 @@ class Course(models.Model):
     # 获取这门课程的章节
     def get_course_lesson(self):
         return self.lesson_set.all()
+
+    # 获取课程的章节数
+    def get_zj_nums(self):
+        return self.lesson_set.all().count()
+
+    get_zj_nums.short_description = '章节数'  # 在后台显示的名称
+
+    # 显示自定义的html代码
+    def go_to(self):
+        from django.utils.safestring import mark_safe
+        # mark_safe后就不会转义
+        return mark_safe("<a href='https://home.cnblogs.com/u/derek1184405959/'>跳转</a>")
+
+    go_to.short_description = "跳转"
+
+    # 应用场景：当添加一门课程的时候，希望课程机构里面的课程数 + 1
+    def save_models(self):
+        # 在保存课程的时候统计课程机构的课程数
+        # obj实际是一个course对象
+        obj = self.new_obj
+        # 如果这里不保存，新增课程，统计的课程数会少一个
+        obj.save()
+        # 确定课程的课程机构存在。
+        if obj.course_org is not None:
+            # 找到添加的课程的课程机构
+            course_org = obj.course_org
+            # 课程机构的课程数量等于添加课程后的数量
+            course_org.course_nums = Course.objects.filter(course_org=course_org).count()
+            course_org.save()
 
     def __str__(self):
         return self.name
@@ -87,3 +120,11 @@ class CourseResource(models.Model):
     class Meta:
         verbose_name = "课程资源"
         verbose_name_plural = verbose_name
+
+
+class BannerCourse(Course):
+    class Meta:
+        verbose_name = '轮播课程'
+        verbose_name_plural = verbose_name
+        # 这里必须设置proxy=True，这样就不会再生成一张表，同时还具有Model的功能
+        proxy = True

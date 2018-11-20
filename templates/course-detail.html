@@ -48,7 +48,8 @@
                                 <li class="piclist"><span class="pram word4">学习用户：</span>
                                     {% for user_course in course.get_learn_users %}
                                         <span class="pic"><img width="40" height="40"
-                                                               src="{{ MEDIA_URL }}{{ user_course.user.image }}"/></span>
+                                                               src="
+                                                                       {{ MEDIA_URL }}{{ user_course.user.image }}"/></span>
                                     {% endfor %}
 
                                 </li>
@@ -57,7 +58,8 @@
                                 <div class="btn colectgroupbtn" id="jsLeftBtn">
                                     {% if has_fav_course %}已收藏{% else %}收藏{% endif %}
                                 </div>
-                                <div class="buy btn"><a style="color: white" href="{% url 'course:course_info' course.id %}">开始学习</a></div>
+                                <div class="buy btn"><a style="color: white"
+                                                        href="{% url 'course:course_info' course.id %}">开始学习</a></div>
                             </div>
                         </div>
                         <div class="group-share-box">
@@ -104,7 +106,7 @@
                                 <li>所在地区：&nbsp;&nbsp;{{ course.course_org.address }}</li>
                                 <li>认&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;证&nbsp;:
                                     &nbsp;&nbsp;
-                                    <img title="金牌机构" , src="/static/images/gold.png"/>
+                                    <img title="金牌机构" , src="{% static 'images/gold.png' %}"/>
                                 </li>
                             </ul>
                         </div>
@@ -123,8 +125,11 @@
                         </ul>
                     </div>
                     <div class="tab_cont tab_cont1">
-                        <p>{{ course.detail }}</p>
-                        <p><img src="/static/media/courses/ueditor/aobama_20161113225044_773.png" title=""
+                        {#                        在模板中必须关闭Django的自动转义才能正常显示#}
+                        {% autoescape off %}
+                            {{ course.detail }}
+                        {% endautoescape %}
+                        <p><img src="{% static 'media/courses/ueditor/aobama_20161113225044_773.png' %}" title=""
                                 alt="aobama.png"/>
                         </p>
                         <table>
@@ -202,7 +207,7 @@
                         <p class="ue_t" style="text-indent:2em;">对于“插入”选项卡上的库，在设计时都充分考虑了其中的项与文档整体外观的协调性。
                             您可以使用这些库来插入表格、页眉、页脚、列表、封面以及其他文档构建基块。 您创建的图片、图表或关系图也将与当前的文档外观协调一致。</p>
                         <p class="ue_t" style="text-indent:2em;"><img
-                                src="http://127.0.0.1:8000/static/media/courses/ueditor/57aa86a0000145c512000460_20161210234050_865.jpg"
+                                src="http://127.0.0.1:8000{% static 'media/courses/ueditor/57aa86a0000145c512000460_20161210234050_865.jpg' %}"
                                 title="" alt="57aa86a0000145c512000460.jpg"/></p>
                         <h3><span class="ue_t" style="font-family:幼圆">[标题 2]</span></h3>
                         <p>
