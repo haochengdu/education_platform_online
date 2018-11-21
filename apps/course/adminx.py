@@ -29,6 +29,7 @@ class CourseAdmin(object):
     refresh_times = [3, 5, 10]  # 自动刷新（里面是秒数）
     # detail就是要显示为富文本的字段名
     style_fields = {"detail": "ueditor"}
+    import_excel = True  # 是否显示导入excel的接口
 
     def queryset(self):
         # 重载queryset方法，来过滤出我们想要的数据的
@@ -36,6 +37,21 @@ class CourseAdmin(object):
         # 只显示is_banner=True的课程
         qs = qs.filter(is_banner=False)
         return qs
+
+    def save_models(self):
+        # 在保存课程的时候统计课程机构的课程数
+        obj = self.new_obj
+        obj.save()
+        if obj.course_org is not None:
+            course_org = obj.course_org
+            course_org.course_nums = Course.objects.filter(course_org=course_org).count()
+            course_org.save()
+
+    def post(self, request, *args, **kwargs):
+        """对上传的excel的操作"""
+        if 'excel' in request.FILES:
+            pass
+        return super(CourseAdmin, self).post(request, args, kwargs)
 
 
 class BannerCourseAdmin(object):
@@ -56,6 +72,15 @@ class BannerCourseAdmin(object):
         # 只显示is_banner=True的课程
         qs = qs.filter(is_banner=True)
         return qs
+
+    def save_models(self):
+        # 在保存课程的时候统计课程机构的课程数
+        obj = self.new_obj
+        obj.save()
+        if obj.course_org is not None:
+            course_org = obj.course_org
+            course_org.course_nums = Course.objects.filter(course_org=course_org).count()
+            course_org.save()
 
 
 class LessonAdmin(object):
