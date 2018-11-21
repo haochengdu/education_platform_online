@@ -63,21 +63,6 @@ class Course(models.Model):
 
     go_to.short_description = "跳转"
 
-    # 应用场景：当添加一门课程的时候，希望课程机构里面的课程数 + 1
-    def save_models(self):
-        # 在保存课程的时候统计课程机构的课程数
-        # obj实际是一个course对象
-        obj = self.new_obj
-        # 如果这里不保存，新增课程，统计的课程数会少一个
-        obj.save()
-        # 确定课程的课程机构存在。
-        if obj.course_org is not None:
-            # 找到添加的课程的课程机构
-            course_org = obj.course_org
-            # 课程机构的课程数量等于添加课程后的数量
-            course_org.course_nums = Course.objects.filter(course_org=course_org).count()
-            course_org.save()
-
     def __str__(self):
         return self.name
 

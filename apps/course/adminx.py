@@ -38,6 +38,7 @@ class CourseAdmin(object):
         qs = qs.filter(is_banner=False)
         return qs
 
+    # 应用场景：当添加一门课程的时候，希望课程机构里面的课程数 + 1
     def save_models(self):
         # 在保存课程的时候统计课程机构的课程数
         obj = self.new_obj
@@ -73,6 +74,7 @@ class BannerCourseAdmin(object):
         qs = qs.filter(is_banner=True)
         return qs
 
+    # 应用场景：当添加一门课程的时候，希望课程机构里面的课程数 + 1
     def save_models(self):
         # 在保存课程的时候统计课程机构的课程数
         obj = self.new_obj
