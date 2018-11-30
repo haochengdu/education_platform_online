@@ -7,16 +7,16 @@ from education_platform_online.settings import EMAIL_HOST_USER
 from users.models import EmailVerifyRecord
 
 
-# 生成随机字符串
+# 生成随机字符串  其实这里用成uuid最好,因为在重置密码接口时会根据这个激活码查询出邮箱，uuid的唯一性那么只会查找出一个
 def random_str(random_length=8):
-    str = ''
+    string = ''
     # 生成字符串的可选字符串
     chars = 'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789'
     length = len(chars) - 1
     random = Random()
     for i in range(random_length):
-        str += chars[random.randint(0, length)]
-    return str
+        string += chars[random.randint(0, length)]
+    return string
 
 
 # 发送注册邮件

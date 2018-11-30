@@ -1,9 +1,12 @@
 # -*- coding:utf-8 -*-
 # users/views.py
 import json
+import re
 
+import datetime
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
@@ -17,7 +20,6 @@ from operation.models import UserCourse, UserFavorite, UserMessage
 from organization.models import CourseOrg, Teacher
 from users.models import UserProfile, EmailVerifyRecord, Banner
 from users.form import LoginForm, RegisterForm, ForgetPwdForm, ModifyPwdForm, UploadImageForm, UserInfoForm
-from django.contrib.auth.hashers import make_password
 from utils.email_send import send_register_eamil
 from utils.mixin_utils import LoginRequiredMixin
 
@@ -61,24 +63,23 @@ class IndexView(View):
             'course_orgs': course_orgs,
         })
 
-        # def user_login(request):
+# def user_login(request):
+#     if request.method == 'POST':
+#             # 获取用户提交的用户名和密码
+#             user_name = request.POST.get('username', None)
+#             pass_word = request.POST.get('password', None)
+#             # 成功返回user对象,失败None
+#             user = authenticate(username=user_name, password=pass_word)
+#             # 如果不是null说明验证成功
+#             if user is not None:
+#                 # 登录
+#                 login(request, user)
+#                 return render(request, 'index.html')
+#             else:
+#                 return render(request, 'login.html', {'msg': '用户名或密码错误'})
+#         elif request.method == 'GET':
+#             return render(request, 'login.html')
 
-
-# if request.method == 'POST':
-#         # 获取用户提交的用户名和密码
-#         user_name = request.POST.get('username', None)
-#         pass_word = request.POST.get('password', None)
-#         # 成功返回user对象,失败None
-#         user = authenticate(username=user_name, password=pass_word)
-#         # 如果不是null说明验证成功
-#         if user is not None:
-#             # 登录
-#             login(request, user)
-#             return render(request, 'index.html')
-#         else:
-#             return render(request, 'login.html', {'msg': '用户名或密码错误'})
-#     elif request.method == 'GET':
-#         return render(request, 'login.html')
 
 class LoginView(View):
     def get(self, request):
@@ -92,6 +93,8 @@ class LoginView(View):
             pass_word = request.POST.get('password', None)
             # 成功返回user对象,失败None
             user = authenticate(username=user_name, password=pass_word)
+            # 账号是否激活
+
             # 如果不是null说明验证成功
             if user is not None:
                 # 登录
@@ -174,9 +177,17 @@ class ForgetPwdView(View):
         forget_pwd = ForgetPwdForm(request.POST)
         if forget_pwd.is_valid():
             email_num = request.POST.get('email', None)
-            # 这里需要判断该email是否存在，存在才发邮件，不存在弹出提示信息
-            send_register_eamil(email_num, 'forget')
-            render(request, 'send_success.html')
+            # 邮箱正则校验
+            if re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', email_num):
+                # 这里需要判断该email是否存在，存在才发邮件，不存在弹出提示信息
+                email_is_exist = UserProfile.objects.filter(email=email_num)
+                if email_is_exist:
+                    send_register_eamil(email_num, 'forget')
+                    render(request, 'send_success.html')
+                else:
+                    return render(request, 'forgetpwd.html', {'forget_pwd': '该邮箱不存在'})  # 实际中不需要返回这种提示
+            else:
+                return render(request, 'forgetpwd.html', {'forget_pwd': '该邮箱错误'})
         else:
             print('忘记密码表单校验失败')
             return render(request, 'forgetpwd.html', {'forget_pwd': forget_pwd})
@@ -190,7 +201,13 @@ class ResetView(View):
         if all_record:
             for record in all_record:
                 email_num = record.email
-                return render(request, "password_reset.html", {"email": email_num})
+                # 有效时间 1天
+                send_time = record.send_time
+                now_time = datetime.datetime.now()
+                if now_time < (send_time + datetime.timedelta(1)):
+                    return render(request, "password_reset.html", {"email": email_num})
+                else:
+                    print('验证码过期')
         else:
             return render(request, "active_fail.html")
 
@@ -270,10 +287,14 @@ class SendEmailCodeView(LoginRequiredMixin, View):
 
     def get(self, request):
         email = request.GET.get('email', '')
-        if UserProfile.objects.filter(email=email):
-            return HttpResponse('{"email":"邮箱已存在"}', content_type='application/json')
-        send_register_eamil(email, 'update_email')
-        return HttpResponse('{"status":"success"}', content_type='application/json')
+        # 需要进行邮箱的验证
+        if re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', email):
+            if UserProfile.objects.filter(email=email):
+                return HttpResponse('{"email":"邮箱已存在"}', content_type='application/json')
+            send_register_eamil(email, 'update_email')
+            return HttpResponse('{"status":"success"}', content_type='application/json')
+        else:
+            return HttpResponse('{"email":"邮箱格式错误"}', content_type='application/json')
 
 
 class UpdateEmailView(LoginRequiredMixin, View):
@@ -282,15 +303,25 @@ class UpdateEmailView(LoginRequiredMixin, View):
     def post(self, request):
         email = request.POST.get("email", "")
         code = request.POST.get("code", "")
-
-        existed_records = EmailVerifyRecord.objects.filter(email=email, code=code, send_type='update_email')
-        if existed_records:
-            user = request.user
-            user.email = email
-            user.save()
-            return HttpResponse('{"status":"success"}', content_type='application/json')
+        # 需要进行邮箱的验证
+        if re.match(r'^[0-9a-zA-Z_]{0,19}@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}$', email):
+            existed_records = EmailVerifyRecord.objects.filter(email=email, code=code, send_type='update_email')
+            if existed_records:
+                # 对验证码时间判断是否过期
+                record = existed_records[0]
+                send_time = record.send_time
+                now_time = datetime.datetime.now()
+                if now_time < (send_time + datetime.timedelta(1)):
+                    user = request.user
+                    user.email = email
+                    user.save()
+                    return HttpResponse('{"status":"success"}', content_type='application/json')
+                else:
+                    return HttpResponse('{"email":"验证码过期"}', content_type='application/json')
+            else:
+                return HttpResponse('{"email":"验证码无效"}', content_type='application/json')
         else:
-            return HttpResponse('{"email":"验证码无效"}', content_type='application/json')
+            return HttpResponse('{"email":"邮箱格式错误"}', content_type='application/json')
 
 
 class MyCourseView(LoginRequiredMixin, View):

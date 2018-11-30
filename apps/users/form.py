@@ -24,7 +24,7 @@ class RegisterForm(forms.Form):
 class ForgetPwdForm(forms.Form):
     """找回密码"""
     email = forms.EmailField(required=True)
-    captcha = CaptchaField(error_messages={'invalid': '验证码错误'})
+    # captcha = CaptchaField(error_messages={'invalid': '验证码错误'})
 
 
 class ModifyPwdForm(forms.Form):
